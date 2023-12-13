@@ -1,0 +1,12 @@
+---
+- name: Update apt repositories
+  become: true
+  apt:
+    update_cache: yes
+
+- name: Install tools packages
+  become: true 
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ packages_to_install }}"

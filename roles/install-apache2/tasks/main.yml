@@ -1,0 +1,32 @@
+---
+- name: Update Apt repositories
+  become: true
+  apt:
+    update_cache: yes
+
+- name: Install Apache2
+  become: true
+  apt:
+    name: apache2
+    state: present
+
+- name: Enable and start Apache2
+  become: true
+  systemd:
+    name: apache2
+    enabled: yes
+    state: started
+
+- name: Enable Apache2 modules
+  become: true
+  command: "a2enmod {{ item }}"
+  with_items:
+    - rewrite
+    - ssl
+    - proxy_http
+
+- name: Restart Apache2
+  become: true
+  systemd:
+    name: apache2
+    state: restarted

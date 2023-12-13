@@ -1,0 +1,71 @@
+---
+- name: Add user -  node_exporter
+  user:	
+    name: node_exporter
+    createhome: no
+    shell: /bin/false
+
+- name: Download -  node_exporter
+  get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+    dest: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+
+- name: Unzip - node_exporter
+  ansible.builtin.unarchive:
+    src: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+    dest: "/opt/"
+    remote_src: yes
+    creates: "/opt/node_exporter-{{ node_exporter_version }}"
+
+- name: Move files to /opt/node_exporter
+  command: mv /opt/node_exporter-{{ node_exporter_version }}.linux-amd64/ /opt/node_exporter
+  become: yes
+
+- name: Change user owner and group /opt/node_exporter
+  ansible.builtin.file:
+    path: "/opt/node_exporter"
+    state: directory
+    owner: node_exporter
+    group: node_exporter
+
+- name: Create service - systemd
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=Node Exporter
+      Wants=network-online.target
+      After=network-online.target
+
+      [Service]
+      User=node_exporter
+      Group=node_exporter
+      Type=simple
+      ExecStart=/opt/node_exporter/node_exporter --collector.systemd
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: /etc/systemd/system/node_exporter.service
+  become: yes
+
+- name: Add rules - iptables
+  ansible.builtin.command:
+    cmd: iptables -I INPUT -p tcp -m tcp --dport 9100 -j ACCEPT
+  become: yes
+
+- name: Enable service - node_exporter
+  ansible.builtin.systemd:
+    name: node_exporter
+    enabled: yes
+  become: yes
+
+- name: Reload Daemon
+  systemd:
+    daemon_reload: yes
+  become: yes
+
+- name: Start service -node_exporter
+  systemd:
+    name: node_exporter
+    state: started
+    enabled: yes
+  become: yes

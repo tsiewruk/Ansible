@@ -1,0 +1,21 @@
+---
+- name: Gathering information about the operating system of the remote host
+  setup:
+
+- name: System details
+  debug:
+    msg:
+      - "Distribution: {{ ansible_distribution }}"
+      - "Version: {{ ansible_distribution_version }}"
+  register: system_info
+
+- name: Save system report to a file
+  local_action:
+    module: lineinfile
+    path: "/tmp/system_report.txt"
+    line: |
+      Host: {{ inventory_hostname }}
+      Distribution: {{ ansible_distribution }}
+      Version: {{ ansible_distribution_version }}
+    create: yes
+  delegate_to: localhost

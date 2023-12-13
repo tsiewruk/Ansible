@@ -1,0 +1,33 @@
+---
+- hosts: <to_fill>
+  become: true
+  vars:
+    node_exporter_version: "0.18.1"
+  roles:
+   - role: install-tools-packages
+     vars:
+       packages_to_install:
+         - htop
+         - vim
+         - less
+         - ca-certificates
+         - gnupg
+         - htop
+         - locales
+         - bash-completion
+         - dialog
+         - procps
+         - rsync
+         - telnet
+         - net-tools
+         - iputils-ping
+         - curl
+         - wget
+         - zip
+         - apt-utils
+         - apt-transport-https
+         - lsb-release
+         - software-properties-common
+   - role: install-docker
+    - role: install-apache2
+    - role: install-node-exporter
