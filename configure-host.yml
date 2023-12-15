@@ -29,5 +29,14 @@
          - lsb-release
          - software-properties-common
    - role: install-docker
-   - role: install-apache2
    - role: install-node-exporter
+   - role: create-tech-user
+     vars:
+       users_list:
+         - name: techtom
+   - role: create-admin-user
+     vars:
+       users_list:
+         - name: tom
+       ssh_keys:
+         - { name: "tsiewruk", ssh_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCf6sZF ... user1@example.com" }
