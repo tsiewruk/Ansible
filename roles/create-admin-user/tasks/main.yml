@@ -1,21 +1,21 @@
 ---
-- name: Create users
+- name: Create user
   become: true
   user:
     name: "{{ item.name }}"
     state: present
     createhome: yes
   with_items: "{{ users_list }}"
-  register: created_users
+  register: created_user
 
-- name: Add users to sudoers file
+- name: Add user to sudoers file
   lineinfile:
     path: /etc/sudoers
     line: "{{ item.name }} ALL=(ALL) NOPASSWD:ALL"
     validate: 'visudo -cf %s'
     state: present
   with_items: "{{ created_users.results }}"
-  when: created_users.results | length > 0
+  when: created_user.results | length > 0
 
 - name: Copy SSH keys to authorized_keys
   become: true
@@ -23,4 +23,4 @@
     user: "{{ item.name }}"
     key: "{{ item.ssh_key }}"
   with_items: "{{ ssh_keys }}"
-  when: created_users.results | length > 0
+  when: created_user.results | length > 0

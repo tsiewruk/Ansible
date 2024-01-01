@@ -4,7 +4,7 @@
   vars:
     node_exporter_version: "0.18.1"
   roles:
-   - role: install-tools-packages
+   - role: install-packages
      vars:
        packages_to_install:
          - htop

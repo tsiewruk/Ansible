@@ -1,5 +1,5 @@
 ---
-- name: Create users
+- name: Create user
   become: true
   user:
     name: "{{ item.name }}"
@@ -8,7 +8,7 @@
   with_items: "{{ users_list }}"
   register: created_users
 
-- name: Add users to sudoers file
+- name: Add user to sudoers file
   lineinfile:
     path: /etc/sudoers
     line: "{{ item.name }} ALL=(ALL) NOPASSWD:ALL"
