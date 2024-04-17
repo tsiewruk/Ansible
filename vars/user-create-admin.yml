@@ -1,0 +1,6 @@
+---
+users_list:
+  - name: tom
+ssh_keys:
+  - name: "tsiewruk"
+    ssh_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCf6sZF ... user1@example.com"
