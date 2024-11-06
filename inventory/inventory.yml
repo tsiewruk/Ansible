@@ -1,2 +1,0 @@
-[target1]
-target1 ansible_host=<IP> ansible_user=ansible ansible_port=22

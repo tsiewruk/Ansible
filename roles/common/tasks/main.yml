@@ -1,0 +1,23 @@
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Set timezone
+  community.general.timezone:
+    name: Europe/Warsaw
+
+- name: Install common packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop:
+  - epel-release
+  - python3.9
+  - jq
+  - fail2ban
+  - bash-completion
+  - htop
+  - firewalld
+  - telnet
+  - net-tools
+  - iputils
