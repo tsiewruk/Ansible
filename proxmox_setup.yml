@@ -1,0 +1,28 @@
+---
+- name: Create VM on Proxmox
+  hosts: localhost
+  gather_facts: no
+  vars:
+    proxmox_api_host: "your-proxmox-host.psuja.dev"
+    proxmox_api_user: "root@pam"
+    proxmox_node: "pve" # Your Proxmox node name
+    vm_name: "new-vm"
+    vm_id: "100" # Unique ID for the VM
+
+  tasks:
+  - name: Create VM
+    community.general.proxmox_kvm:
+      api_host: "{{ proxmox_api_host }}"
+      api_user: "{{ proxmox_api_user }}"
+      api_password: "{{ proxmox_api_password }}"
+      node: "{{ proxmox_node }}"
+      name: "{{ vm_name }}"
+      vmid: "{{ vm_id }}"
+      state: present
+      cores: 2
+      memory: 2048
+      net:
+        net0: 'virtio,bridge=vmbr0'
+      disk:
+        virtio0: 'local-lvm:32'
+      ostype: l26
