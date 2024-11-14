@@ -1,0 +1,44 @@
+---
+- name: Check if VM exists
+  community.general.proxmox_vm_info:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_password: "{{ proxmox_password }}"
+    node: "{{ proxmox_node }}"
+    vmid: "{{ vmid }}"
+    validate_certs: "{{ verify_ssl }}"
+  register: vm_exists
+
+- name: Create new VM
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_password: "{{ proxmox_password }}"
+    node: "{{ proxmox_node }}"
+    vmid: "{{ vmid }}"
+    name: "{{ vm_name }}"
+    state: present
+    cores: "{{ vm_cores }}"
+    memory: "{{ vm_memory }}"
+    ostype: "l26"
+    net:
+      net0: 'virtio,bridge=vmbr0'
+    virtio:
+      virtio0: '{{ vm_storage }}:{{ vm_disk_size }}'
+    ide:
+      ide2: '{{ iso_storage }}:iso/{{ iso_file }},media=cdrom'
+    boot: 'order=ide2;virtio0'
+    description: "AlmaLinux VM created by Ansible"
+    validate_certs: "{{ verify_ssl }}"
+  when: vm_exists.proxmox_vms | length == 0
+
+- name: Start VM
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api_host }}"
+    api_user: "{{ proxmox_api_user }}"
+    api_password: "{{ proxmox_password }}"
+    node: "{{ proxmox_node }}"
+    vmid: "{{ vmid }}"
+    state: started
+    validate_certs: "{{ verify_ssl }}"
+  when: vm_exists.proxmox_vms | length == 0

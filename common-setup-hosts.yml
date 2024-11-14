@@ -1,9 +1,10 @@
-- name: Set up all k8s servers
+- name: Common setup for all hosts
   hosts:
   - master-node
+  - worker-node
+  #  - llm-node
   remote_user: ansible
   become: true
   become_user: root
   roles:
   - common
-

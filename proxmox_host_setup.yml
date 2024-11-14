@@ -1,0 +1,54 @@
+---
+- name: Setup Proxmox host k3s-m1
+  hosts: localhost
+  gather_facts: no
+  collections:
+  - community.general
+  vars:
+    proxmox_api_host: "{{ vault_proxmox_api_host }}"
+    proxmox_api_user: "{{ vault_proxmox_api_user }}"
+    proxmox_password: "{{ vault_proxmox_password }}"
+    vmid: "150"
+    vm_name: "{{ inventory_hostname }}"
+    vm_memory: "4096"
+    vm_cores: "2"
+    vm_disk_size: "30"
+    iso_file: "AlmaLinux-9.4-x86_64-minimal.iso"
+  roles:
+  - proxmox_host_setup
+
+- name: Setup Proxmox host k3s-w1
+  hosts: localhost
+  gather_facts: no
+  collections:
+  - community.general
+  vars:
+    proxmox_api_host: "{{ vault_proxmox_api_host }}"
+    proxmox_api_user: "{{ vault_proxmox_api_user }}"
+    proxmox_password: "{{ vault_proxmox_password }}"
+    vmid: "151"
+    vm_name: "{{ inventory_hostname }}"
+    vm_memory: "4096"
+    vm_cores: "2"
+    vm_disk_size: "30"
+    iso_file: "AlmaLinux-9.4-x86_64-minimal.iso"
+  roles:
+  - proxmox_host_setup
+
+- name: Setup Proxmox host k3s-w2
+  hosts: localhost
+  gather_facts: no
+  collections:
+  - community.general
+  vars:
+    proxmox_api_host: "{{ vault_proxmox_api_host }}"
+    proxmox_api_user: "{{ vault_proxmox_api_user }}"
+    proxmox_password: "{{ vault_proxmox_password }}"
+    vmid: "152"
+    vm_name: "{{ inventory_hostname }}"
+    vm_memory: "4096"
+    vm_cores: "2"
+    vm_disk_size: "30"
+    iso_file: "AlmaLinux-9.4-x86_64-minimal.iso"
+  roles:
+  - proxmox_host_setup
