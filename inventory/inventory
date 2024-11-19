@@ -1,10 +1,10 @@
 [master-node]
-k3s-m1 ansible_host=192.168.178.132 role=master
+k3s-m1 ansible_host=m1.psuja.dev role=master
 
 [worker-node]
-k3s-w1 ansible_host=192.168.178.133 role=worker
-k3s-w2 ansible_host=192.168.178.134 role=worker
+k3s-w1 ansible_host=w1.psuja.dev role=worker
+k3s-w2 ansible_host=w2.psuja.dev role=worker
 
 [llm]
-bielik ansible_host=192.168.178.135 role=llm
-llama ansible_host=192.168.178.136 role=llm
+bielik ansible_host=bielik.psuja.dev role=llm
+llama ansible_host=llama.psuja.dev role=llm
