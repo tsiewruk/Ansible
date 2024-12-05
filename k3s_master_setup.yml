@@ -1,10 +1,8 @@
 - name: Common setup for all hosts
   hosts:
   - master-node
-  - worker-node
-  #  - llm-node
   remote_user: ansible
   become: true
   become_user: root
   roles:
-  - common
+  - k3s_master_setup

@@ -1,0 +1,16 @@
+---
+- name: Download etcdctl
+  ansible.builtin.get_url:
+    url: https://github.com/etcd-io/etcd/releases/download/v{{ k3s_etcd_version }}/etcd-v{{ k3s_etcd_version }}-linux-amd64.tar.gz
+    checksum: sha256:https://github.com/etcd-io/etcd/releases/download/v{{ k3s_etcd_version }}/SHA256SUMS
+    dest: /tmp/etcd.tar.gz
+    mode: "0644"
+
+- name: Unpack etcdctl
+  ansible.builtin.unarchive:
+    src: /tmp/etcd.tar.gz
+    dest: /usr/local/bin
+    remote_src: true
+    extra_opts:
+    - --strip-components
+    - 1

@@ -1,0 +1,9 @@
+- name: Common setup for all hosts
+  hosts:
+  - master-node
+  - worker-node
+  remote_user: ansible
+  become: true
+  become_user: root
+  roles:
+  - k3s_worker_setup

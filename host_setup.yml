@@ -2,8 +2,9 @@
   hosts:
   - master-node
   - worker-node
+  #  - llm-node
   remote_user: ansible
   become: true
   become_user: root
   roles:
-  - k3s
+  - host_setup
