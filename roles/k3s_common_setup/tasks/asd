@@ -1,0 +1,168 @@
+- name: Configure firewalld
+  ansible.posix.firewalld:
+    zone: public
+    state: present
+    permanent: true
+    target: default
+  notify: Reload firewalld
+
+- name: Enable and start firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    enabled: true
+    state: started
+
+- name: Enable public services
+  ansible.posix.firewalld:
+    zone: public
+    service: "{{ item }}"
+    state: enabled
+    permanent: true
+  notify: Reload firewalld
+  loop:
+  - ssh
+  - http
+  - https
+  - kube-apiserver
+
+- name: Collect IP addresses of k3s servers
+  ansible.builtin.set_fact:
+    k3s_server_ips: "{{ k3s_server_ips | default([]) + [hostvars[item]['ansible_default_ipv4']['address']] }}"
+  loop: "{{ groups['master'] + groups['agent'] }}"
+  run_once: true
+
+- name: Add public IPs of k3s servers to trusted zone
+  ansible.posix.firewalld:
+    zone: trusted
+    source: "{{ item }}"
+    state: enabled
+    permanent: true
+  notify: Reload firewalld
+  loop: "{{ k3s_server_ips }}"
+
+- name: Add internal IPs of pods and services to trusted zone
+  ansible.posix.firewalld:
+    zone: trusted
+    source: "{{ item }}"
+    state: enabled
+    permanent: true
+  notify: Reload firewalld
+  loop:
+  - 10.42.0.0/16
+  - 10.43.0.0/16
+
+- name: Set PATH
+  ansible.builtin.copy:
+    content: "PATH=$PATH:/usr/local/bin"
+    dest: /etc/profile.d/path.sh
+    mode: "0644"
+
+- name: Create required directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+  - /etc/rancher/k3s
+  - /etc/iscsi
+  - /root/.aws
+
+- name: Enable CRB repository
+  # noqa no-changed-when
+  ansible.builtin.command:
+    cmd: dnf config-manager --set-enabled crb
+  when: role == "agent"
+
+- name: Create aws configuration
+  ansible.builtin.template:
+    src: "templates/aws/{{ item }}"
+    dest: "/root/.aws/{{ item }}"
+    mode: "0600"
+  loop:
+  - config
+  - credentials
+  when: role == "agent"
+
+- name: Copy ecr token refresh script
+  ansible.builtin.template:
+    src: templates/ecr-credentials.sh
+    dest: /usr/local/bin/ecr-credentials.sh
+    mode: "0750"
+  when: role == "agent"
+
+- name: Copy k3s service checker
+  ansible.builtin.template:
+    src: templates/check-k3s-service.sh
+    dest: /usr/local/bin/check-k3s-service.sh
+    mode: "0750"
+  when: role == "k6"
+
+- name: Schedule script to run every 5 minutes
+  ansible.builtin.cron:
+    name: "Execute script every 5 minutes"
+    user: root
+    job: "/usr/local/bin/check-k3s-service.sh"
+    state: present
+    minute: "*/5"
+  when: role == "k6"
+
+- name: Schedule script to run every 6 hours
+  ansible.builtin.cron:
+    name: "Execute script every 6 hours"
+    user: root
+    job: "/usr/local/bin/ecr-credentials.sh"
+    state: present
+    minute: "0"
+    hour: "*/4"
+  when: role == "agent"
+
+- name: Install iscsi
+  ansible.builtin.dnf:
+    name: iscsi-initiator-utils
+    state: present
+
+- name: Configure iscsi
+  ansible.builtin.command:
+    cmd: echo "InitiatorName=$(/sbin/iscsi-iname)" > /etc/iscsi/initiatorname.iscsi
+    creates: /etc/iscsi/initiatorname.iscsi
+
+- name: Enable iscsi
+  ansible.builtin.systemd:
+    name: iscsid
+    enabled: true
+    state: started
+
+- name: Load iscsi kernel module
+  community.general.modprobe:
+    name: iscsi_tcp
+    state: present
+
+- name: Set sysctl parameters
+  ansible.builtin.copy:
+    src: files/90-kubelet.conf
+    dest: /etc/sysctl.d/90-kubelet.conf
+    mode: "0644"
+
+- name: Configure k3s
+  ansible.builtin.template:
+    src: templates/config.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml
+    mode: "0644"
+
+- name: Download etcdctl
+  ansible.builtin.get_url:
+    url: https://github.com/etcd-io/etcd/releases/download/v{{ k3s_etcd_version }}/etcd-v{{ k3s_etcd_version }}-linux-amd64.tar.gz
+    checksum: sha256:https://github.com/etcd-io/etcd/releases/download/v{{ k3s_etcd_version }}/SHA256SUMS
+    dest: /tmp/etcd.tar.gz
+    mode: "0644"
+  when: etcd is defined
+
+- name: Unpack etcdctl
+  ansible.builtin.unarchive:
+    src: /tmp/etcd.tar.gz
+    dest: /usr/local/bin
+    remote_src: true
+    extra_opts:
+    - --strip-components
+    - 1
+  when: etcd is defined

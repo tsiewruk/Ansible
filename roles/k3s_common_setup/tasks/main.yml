@@ -1,0 +1,87 @@
+# - name: Gather facts
+#   ansible.builtin.setup:
+#   when: ansible_default_ipv4 is not defined
+
+# - name: Set fact for k3s server IPs
+#   ansible.builtin.set_fact:
+#     k3s_server_ips: "{{ k3s_server_ips | default([]) + [hostvars[item]['ansible_default_ipv4']['address']] }}"
+#   loop: "{{ groups['master-node'] + groups['worker-node'] }}"
+#   run_once: true
+
+- name: Firewalld - Add internal IPs of pods and services to trusted zone
+  ansible.posix.firewalld:
+    zone: trusted
+    source: "{{ item }}"
+    state: enabled
+    permanent: true
+  notify: Reload firewalld
+  loop:
+  - 10.42.0.0/16
+  - 10.43.0.0/16
+
+# - name: Firewalld - Add k3s server IPs to trusted zone
+#   ansible.posix.firewalld:
+#     zone: trusted
+#     source: "{{ item }}"
+#     state: enabled
+#     permanent: true
+#   notify: Reload firewalld
+#   loop: "{{ k3s_server_ips }}"
+
+- name: Firewalld - enable services
+  ansible.posix.firewalld:
+    zone: public
+    service: "{{ item }}"
+    state: enabled
+    permanent: true
+  notify: Reload firewalld
+  loop:
+  - kube-apiserver
+
+- name: Set PATH
+  ansible.builtin.copy:
+    content: "PATH=$PATH:/usr/local/bin"
+    dest: /etc/profile.d/path.sh
+    mode: "0644"
+
+- name: Create required directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+  - /etc/rancher/k3s
+  - /etc/iscsi
+
+- name: Install iscsi
+  ansible.builtin.dnf:
+    name: iscsi-initiator-utils
+    state: present
+
+- name: Configure iscsi
+  ansible.builtin.command:
+    cmd: echo "InitiatorName=$(/sbin/iscsi-iname)" > /etc/iscsi/initiatorname.iscsi
+    creates: /etc/iscsi/initiatorname.iscsi
+
+- name: Enable iscsi
+  ansible.builtin.systemd:
+    name: iscsid
+    enabled: true
+    state: started
+
+- name: Load iscsi kernel module
+  community.general.modprobe:
+    name: iscsi_tcp
+    state: present
+
+- name: Set sysctl parameters
+  ansible.builtin.copy:
+    src: templates/90-kubelet.conf
+    dest: /etc/sysctl.d/90-kubelet.conf
+    mode: "0644"
+
+- name: Configure k3s
+  ansible.builtin.template:
+    src: templates/config.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml
+    mode: "0644"
