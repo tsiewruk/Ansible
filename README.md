@@ -1,4 +1,4 @@
-# K3s Cluster Deployment with Ansible
+# K3S Cluster Deployment with Ansible
 
 This repository contains Ansible playbooks for deploying and managing a K3s cluster on Proxmox virtual machines.
 

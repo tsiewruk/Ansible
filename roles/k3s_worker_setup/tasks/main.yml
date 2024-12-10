@@ -1,0 +1,31 @@
+---
+- name: Get K3s token from master node
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  delegate_to: "{{ k3s_master_node }}"
+  register: k3s_token_base64
+
+- name: Set token fact
+  ansible.builtin.set_fact:
+    k3s_token: "{{ k3s_token_base64['content'] | b64decode | trim }}"
+
+- name: Add system parameters to sysctl.conf
+  ansible.builtin.blockinfile:
+    path: /etc/sysctl.conf
+    block: |
+      vm.overcommit_memory = 1
+      kernel.panic = 10
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - K3S SYSTEM PARAMETERS"
+
+- name: Apply sysctl settings
+  ansible.builtin.command: sysctl -p
+
+- name: Install K3s worker node
+  ansible.builtin.shell: |+
+    curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v{{ k3s_version }} K3S_TOKEN={{ k3s_token }} K3S_URL=https://{{ k3s_master_node }}:6443 sh - 
+      
+- name: Enable and start K3s service
+  ansible.builtin.service:
+    name: k3s-agent
+    state: started
+    enabled: true

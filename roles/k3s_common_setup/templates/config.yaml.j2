@@ -1,0 +1,12 @@
+{% if role == "master" %}
+etcd-expose-metrics: true
+kube-controller-manager-arg:
+  - "bind-address=0.0.0.0"
+kube-scheduler-arg:
+  - "bind-address=0.0.0.0"
+flannel-backend: wireguard-native
+{% endif %}
+kube-proxy-arg:
+  - "metrics-bind-address=0.0.0.0"
+protect-kernel-defaults: true
+node-external-ip: {{ ansible_default_ipv4.address }}
