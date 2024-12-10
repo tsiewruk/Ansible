@@ -5,4 +5,5 @@
   become: true
   become_user: root
   roles:
+  - k3s_common_setup
   - k3s_master_setup
