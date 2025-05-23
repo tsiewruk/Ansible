@@ -9,6 +9,16 @@
   ansible.builtin.hostname:
     name: "{{ inventory_hostname }}"
 
+- name: Update hosts file with master-node and worker-node groups
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    block: |
+      {% for host in groups['master-node'] + groups['worker-node'] %}
+      {{ hostvars[host]['ansible_host_ip'] }} {{ hostvars[host]['ansible_host'] }}
+      {% endfor %}
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - all nodes"
+    insertafter: "^127.0.0.1"
+
 - name: Set timezone
   community.general.timezone:
     name: Europe/Warsaw

@@ -1,0 +1,10 @@
+---
+- name: Get K3s token from master node
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  delegate_to: "{{ k3s_master_node }}"
+  register: k3s_token_base64
+
+- name: Set token fact
+  ansible.builtin.set_fact:
+    k3s_token: "{{ k3s_token_base64['content'] | b64decode | trim }}"

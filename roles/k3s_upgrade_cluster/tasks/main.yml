@@ -1,0 +1,46 @@
+---
+
+- name: Stop K3s service on master nodes
+  systemd:
+    name: k3s
+    state: stopped
+  tags:
+    - master
+
+- name: Import K3S-server installation task and install
+  import_tasks: "{{ role_path }}/../k3s_master_setup/tasks/install_k3s.yml"
+  tags:
+    - master
+
+- name: Start K3S-server service on master nodes
+  systemd:
+    name: k3s
+    state: started
+    enabled: yes
+  tags:
+    - master
+
+- name: Stop K3S-agent service on worker nodes
+  systemd:
+    name: k3s-agent
+    state: stopped
+  tags:
+    - worker
+
+- name: Import get_master_token task
+  import_tasks: "{{ role_path }}/../k3s_worker_setup/tasks/get_master_token.yml"
+  tags:
+    - worker
+
+- name: Import K3S-agent installation task and install
+  import_tasks: "{{ role_path }}/../k3s_worker_setup/tasks/install_k3s-agent.yml"
+  tags:
+    - worker
+
+- name: Start K3S-server service on master nodes
+  systemd:
+    name: k3s-agent
+    state: started
+    enabled: yes
+  tags:
+    - master

@@ -15,18 +15,10 @@
     - --strip-components
     - 1
 
-- name: Install K3s master node
-  ansible.builtin.shell: |
-    curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=v{{ k3s_version }} sh -s - server \
-      --cluster-init \
-      --disable servicelb \
-      --disable traefik \
-      --write-kubeconfig-mode 644 \
-      --node-taint "node-role.kubernetes.io/master:NoSchedule"
-  args:
-    creates: /usr/local/bin/k3s
+- name: Import K3S-server installation task and install
+  import_tasks: "{{ role_path }}/tasks/install_k3s.yml"
 
-- name: Enable and start K3s service
+- name: Enable and start K3S-server service
   ansible.builtin.service:
     name: k3s
     state: started

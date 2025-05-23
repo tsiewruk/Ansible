@@ -8,6 +8,16 @@
 #   loop: "{{ groups['master-node'] + groups['worker-node'] }}"
 #   run_once: true
 
+- name: Install common packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop:
+  - iscsi-initiator-utils
+  - nfs-utils
+  - cryptsetup
+  - device-mapper
+
 - name: Firewalld - Add internal IPs of pods and services to trusted zone
   ansible.posix.firewalld:
     zone: trusted
